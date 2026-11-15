@@ -1,0 +1,17 @@
+name: Send Telegram Notification
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  send-telegram:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send message to Telegram
+        uses: appleboy/telegram-action@master
+        with:
+          to: -100XXXXXXXXXX
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            האתר עודכן בהצלחה! התוכנית החדשה עלתה לארכיון של יואלי דיקמן.
