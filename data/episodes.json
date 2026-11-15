@@ -1,0 +1,16 @@
+{
+  "updated": "2026-11-15T17:45:00+02:00",
+  "source": "demo",
+  "note": "נתוני הדגמה – הקובץ יוחלף אוטומטית כשסקריפט הסנכרון ירוץ על ערוצי הטלגרם",
+  "items": [
+    { "id": "laila_menatzeach-demo3", "title": "לילה מנצח - יואלי דיקמן 13.11.26", "category": "לילה מנצח", "date": "2026-11-13", "duration": 6946, "url": "" },
+    { "id": "masster_play-demo6", "title": "מאסטר פליי - יואלי דיקמן 12.11.26", "category": "מאסטר פליי", "date": "2026-11-12", "duration": 6297, "url": "" },
+    { "id": "masster_play-demo5", "title": "מאסטר פליי - יואלי דיקמן 11.11.26", "category": "מאסטר פליי", "date": "2026-11-11", "duration": 6419, "url": "" },
+    { "id": "masster_play-demo4", "title": "מאסטר פליי - יואלי דיקמן 09.11.26", "category": "מאסטר פליי", "date": "2026-11-09", "duration": 6768, "url": "" },
+    { "id": "masster_play-demo3", "title": "מאסטר פליי - יואלי דיקמן 08.11.26", "category": "מאסטר פליי", "date": "2026-11-08", "duration": 6434, "url": "" },
+    { "id": "laila_menatzeach-demo2", "title": "לילה מנצח - יואלי דיקמן 06.11.26", "category": "לילה מנצח", "date": "2026-11-06", "duration": 9175, "url": "" },
+    { "id": "masster_play-demo2", "title": "מאסטר פליי - יואלי דיקמן 05.11.26", "category": "מאסטר פליי", "date": "2026-11-05", "duration": 6307, "url": "" },
+    { "id": "masster_play-demo1", "title": "מאסטר פליי - יואלי דיקמן 02.11.26", "category": "מאסטר פליי", "date": "2026-11-02", "duration": 6441, "url": "" },
+    { "id": "laila_menatzeach-demo1", "title": "לילה מנצח - יואלי דיקמן 29.10.26", "category": "לילה מנצח", "date": "2026-10-30", "duration": 8499, "url": "" }
+  ]
+}
