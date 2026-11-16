@@ -1,6 +1,6 @@
-# נגינה FM – אפליקציית רדיו (PWA)
+# DIKMAN FM – אפליקציית רדיו (PWA)
 
-> "נגינה FM" הוא שם זמני. מחליפים אותו ב-`js/config.js`, ב-`index.html` וב-`manifest.webmanifest`.
+> שם התחנה: DIKMAN FM. מופיע ב-`js/config.js`, ב-`index.html` וב-`manifest.webmanifest`.
 
 ## 1. ארכיטקטורה (בלי שרת)
 
