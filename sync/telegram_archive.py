@@ -17,6 +17,8 @@
   CHANNELS           – אופציונלי. ברירת מחדל: שני הערוצים של יואלי
   TIME_BUDGET_MIN    – אופציונלי. כמה דקות לעבוד בהרצה אחת (ברירת מחדל 320)
   AUDIO_BITRATE      – אופציונלי. למשל 96k כדי לדחוס ולחסוך אחסון. ריק = הקובץ המקורי
+  NOTIFY_CHAT_ID     – אופציונלי. צ'אט/קבוצה/ערוץ שאליו הבוט ישלח הודעה כשנוספים פרקים
+                       (מספר כמו -1001234567890 או @username). הבוט חייב להיות חבר שם.
 """
 import asyncio
 import json
@@ -145,6 +147,7 @@ class Archive:
         if self.data.get("source") != "telegram":   # מחליפים את נתוני ההדגמה
             self.data = {"items": []}
         self.ids = {it["id"] for it in self.data["items"]}
+        self.new = []   # פרקים שנוספו בהרצה הזו (להודעה בטלגרם)
         self.state = load_json(STATE, {})
 
     def save(self):
@@ -186,12 +189,14 @@ async def sync_channel(client, uploader, arc, ch, deadline, bitrate=None):
                         path, ext = transcode(path, bitrate), "mp3"
                     key = f"{ch['slug']}/{msg.id}.{ext}"
                     uploader(path, key, MIME.get(ext, "audio/mpeg"))
-                arc.data["items"].append({
+                item = {
                     "id": ep_id, "title": title, "category": ch["category"], "date": date,
                     "duration": int(getattr(f, "duration", 0) or 0),
                     "url": f"{arc.media_base}/{key}",
                     "telegram": f"{ch['username']}/{msg.id}",
-                })
+                }
+                arc.data["items"].append(item)
+                arc.new.append(item)
                 arc.ids.add(ep_id)
                 added += 1
             st["last_id"] = max(st["last_id"], msg.id)
@@ -231,14 +236,41 @@ def make_uploader():
     return upload
 
 
+def notify_text(new_items, total):
+    lines = [f"🎙 נוספו {len(new_items)} פרקים חדשים לארכיון של יואלי דיקמן:"]
+    for it in new_items[:8]:
+        lines.append(f"• {it['category']}: {it['title']}")
+    if len(new_items) > 8:
+        lines.append(f"…ועוד {len(new_items) - 8}")
+    lines.append(f"סה״כ בארכיון: {total:,}")
+    return "\n".join(lines)
+
+
+async def notify(client, chat, text):
+    """הודעה בטלגרם – כשל כאן לא מכשיל את ההרצה."""
+    try:
+        target = int(chat) if chat.lstrip("-").isdigit() else chat
+        await client.send_message(target, text)
+        log("✉ נשלחה הודעה לטלגרם")
+    except Exception as e:  # noqa: BLE001
+        log(f"⚠ לא הצלחתי לשלוח הודעה לטלגרם ({chat}): {e}")
+
+
 async def main():
     from telethon import TelegramClient
     from telethon.sessions import StringSession
 
+    # מקבלים את MEDIA_BASE_URL גם אם נשמר כ-Secret וגם כ-Variable
     missing = [k for k in ("TG_API_ID", "TG_API_HASH", "TG_BOT_TOKEN", "R2_ACCOUNT_ID", "R2_ACCESS_KEY_ID",
                            "R2_SECRET_ACCESS_KEY", "R2_BUCKET", "MEDIA_BASE_URL") if not os.environ.get(k)]
     if missing:
-        log("חסרים Secrets ב-GitHub: " + ", ".join(missing))
+        log("חסרים ערכים ב-GitHub (Settings ← Secrets and variables ← Actions): " + ", ".join(missing))
+        if "MEDIA_BASE_URL" in missing:
+            log("MEDIA_BASE_URL = הכתובת הציבורית של ה-bucket ב-R2 (https://pub-….r2.dev). "
+                "ב-Cloudflare: R2 ← ה-bucket ← Settings ← Public access ← R2.dev subdomain ← Allow.")
+        sys.exit(1)
+    if not re.match(r"^https://", os.environ["MEDIA_BASE_URL"].strip()):
+        log("MEDIA_BASE_URL חייב להתחיל ב-https:// (למשל https://pub-xxxx.r2.dev)")
         sys.exit(1)
 
     deadline = time.time() + 60 * int(os.environ.get("TIME_BUDGET_MIN") or 320)
@@ -260,6 +292,9 @@ async def main():
                 break
         arc.save()
         log(f"סיום. נוספו {total} פרקים. בארכיון: {len(arc.data['items'])}.")
+        chat = (os.environ.get("NOTIFY_CHAT_ID") or "").strip()
+        if arc.new and chat:
+            await notify(client, chat, notify_text(arc.new, len(arc.data["items"])))
     finally:
         await client.disconnect()
 
