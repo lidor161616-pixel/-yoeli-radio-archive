@@ -30,6 +30,8 @@
     wasLive: false,
     liveTitle: "",
     pendingRadio: false,
+    channel: null,       // ערוץ ארכיון שנבחר במיקסר (קטגוריה) או null = הכול
+    manualLive: false,   // שידור חי שהופעל ידנית מהמיקסר – לא מנתקים אותו אוטומטית
     stopping: false,
     retries: 0,
     closed: null
@@ -212,6 +214,7 @@
     var r = $("btnRadio");
     if (r) r.textContent = playing && state.auto ? "מאזינים עכשיו" : (liveNow ? "האזנה לשידור החי" : "האזנה לרדיו");
     if (r) r.classList.toggle("is-on", playing && state.auto);
+    try { document.dispatchEvent(new CustomEvent("radio:update")); } catch (e) {}
   }
   function setLoading(on) { $("btnPlay").classList.toggle("is-loading", !!on); }
 
@@ -265,13 +268,14 @@
   // מקור הרדיו האוטומטי: שידור חי בזמן החלון, אחרת שידורים חוזרים
   function playRadio() {
     if (guardClosed()) return;
+    state.channel = null; state.manualLive = false;
     if (schedStatus().live && liveAvailable()) playLiveNow();
     else playReplayNext();
   }
 
-  function playLiveNow() {
+  function playLiveNow(manual) {
     if (guardClosed()) return;
-    state.mode = "live"; state.auto = true; state.retries = 0;
+    state.mode = "live"; state.auto = !manual; state.retries = 0; state.manualLive = !!manual;
     state.item = { id: "live", title: CFG.live.program };
     updateDeck();
     start(liveSrc(), { loop: !CFG.live.url });
@@ -279,7 +283,7 @@
 
   // שקית ערבוב: כל ההקלטות מתנגנות לפני שמשהו חוזר
   function rotationPool() {
-    var c = CFG.rotation.category;
+    var c = state.channel || CFG.rotation.category;
     return state.episodes.filter(function (ep) { return !c || ep.category === c; });
   }
   function nextFromBag() {
@@ -363,7 +367,7 @@
         // התחיל שידור חי (או חזר לפעול אחרי תקלה)
         toast("עוברים לשידור החי");
         playLiveNow();
-      } else if (!st.live && state.mode === "live") {
+      } else if (!st.live && state.mode === "live" && !state.manualLive) {
         toast("השידור החי הסתיים – ממשיכים בשידורים חוזרים");
         playReplayNext();
       }
@@ -391,7 +395,10 @@
   });
   audio.addEventListener("ended", function () {
     if (state.mode === "ep") { delete state.pos[state.item.id]; save("pos", state.pos); }
-    if (state.mode !== "live") playRadio();   // בסוף כל הקלטה – הרדיו ממשיך
+    // בסוף כל הקלטה – הרדיו ממשיך (נשארים בערוץ שנבחר במיקסר, אלא אם התחיל שידור חי)
+    if (state.mode !== "live") {
+      if (state.channel && !(schedStatus().live && liveAvailable())) playReplayNext(); else playRadio();
+    }
   });
   audio.addEventListener("error", function () {
     if (state.stopping || !state.item) return;
@@ -647,7 +654,8 @@
   (function detectFixedVolume() {
     var before = audio.volume; audio.volume = 0.5;
     var fixed = audio.volume !== 0.5; audio.volume = before;
-    if (fixed) document.querySelector(".fader").hidden = true;
+    var f = document.querySelector(".fader");
+    if (fixed) { if (f) f.hidden = true; document.documentElement.classList.add("fixed-volume"); }
   })();
 
   // ---------- מקלדת / מקשי טלפון כשר ----------
@@ -712,6 +720,21 @@
   if ("serviceWorker" in navigator && location.protocol === "https:") {
     try { navigator.serviceWorker.register("sw.js").catch(function () {}); } catch (e) {}
   }
+
+  // ---------- ממשק למיקסר (js/mixer.js) ----------
+  window.RadioApp = {
+    state: state, cfg: CFG, audio: audio,
+    schedStatus: schedStatus,
+    playRadio: playRadio,                                   // אוטומטי: חי בזמן התוכנית, אחרת ארכיון
+    playLive: function () { playLiveNow(true); },           // השידור החי של התחנה, עד שמכבים
+    playChannel: function (cat) {                           // שידורים חוזרים מתוכנית אחת
+      if (guardClosed()) return;
+      state.channel = cat; state.bag = []; state.manualLive = false; playReplayNext();
+    },
+    toggle: togglePlay, stop: stopAudio, seek: seek, next: function () { step(1); },
+    setVolume: function (v) { vol.value = Math.round(v); applyVol(); },
+    getVolume: function () { return +vol.value; }
+  };
 
   // ---------- הפעלה ----------
   $("year").textContent = new Date().getFullYear();
