@@ -1,9 +1,10 @@
 /* Service Worker – מעטפת האפליקציה עובדת גם בלי רשת.
    שידורים חיים וקובצי שמע לא נשמרים במטמון (לא חוסמים, לא תופסים מקום). */
-var VERSION = "ngn-v2";
+var VERSION = "ngn-v3";
 var SHELL = [
   "./", "index.html", "css/app.css",
-  "js/config.js", "js/zmanim.js", "js/schedule.js", "js/demo-audio.js", "js/app.js",
+  "css/motion.css", "css/mixer.css",
+  "js/config.js", "js/zmanim.js", "js/schedule.js", "js/demo-audio.js", "js/app.js", "js/motion.js", "js/mixer.js",
   "icons/icon.svg", "manifest.webmanifest"
 ];
 
@@ -31,12 +32,11 @@ self.addEventListener("fetch", function (e) {
     }).catch(function () { return caches.match(req); }));
     return;
   }
-  // שאר הקבצים: מטמון קודם, ועדכון ברקע
-  e.respondWith(caches.match(req).then(function (hit) {
-    var net = fetch(req).then(function (res) {
-      if (res.ok) { var copy = res.clone(); caches.open(VERSION).then(function (c) { c.put(req, copy); }); }
-      return res;
-    }).catch(function () { return hit; });
-    return hit || net;
+  // שאר הקבצים: רשת קודם (כדי שעדכון באתר יגיע מיד ובשלמותו), מטמון כגיבוי כשאין רשת
+  e.respondWith(fetch(req).then(function (res) {
+    if (res.ok) { var copy = res.clone(); caches.open(VERSION).then(function (c) { c.put(req, copy); }); }
+    return res;
+  }).catch(function () {
+    return caches.match(req).then(function (hit) { return hit || (req.mode === "navigate" ? caches.match("index.html") : Response.error()); });
   }));
 });
