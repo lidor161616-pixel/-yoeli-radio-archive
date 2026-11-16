@@ -17,6 +17,8 @@
   CHANNELS           – אופציונלי. ברירת מחדל: שני הערוצים של יואלי
   TIME_BUDGET_MIN    – אופציונלי. כמה דקות לעבוד בהרצה אחת (ברירת מחדל 320)
   AUDIO_BITRATE      – אופציונלי. למשל 96k כדי לדחוס ולחסוך אחסון. ריק = הקובץ המקורי
+  MAX_PER_CHANNEL    – אופציונלי. כמה פרקים לכל היותר מכל ערוץ (ברירת מחדל 30 – לשמור על נפח האחסון).
+                       0 = בלי הגבלה. מגדילים רק אם יש מקום ב-R2.
   NOTIFY_CHAT_ID     – אופציונלי. צ'אטים/ערוצים שאליהם הבוט ישלח הודעה כשנוספים פרקים,
                        מופרדים בפסיק (-1001234567890,-1009876543210). הבוט חייב להיות מנהל שם.
 """
@@ -159,11 +161,16 @@ class Archive:
         save_json(STATE, self.state)
 
 
-async def sync_channel(client, uploader, arc, ch, deadline, bitrate=None):
+async def sync_channel(client, uploader, arc, ch, deadline, bitrate=None, max_items=0):
+    have = sum(1 for it in arc.data["items"] if it["id"].startswith(ch["slug"] + "-"))
+    if max_items and have >= max_items:
+        log(f"■ @{ch['username']}: כבר יש {have} פרקים (המגבלה {max_items}) – מדלג")
+        return 0, True
     entity = await client.get_entity(ch["username"])
     st = arc.state.setdefault(ch["slug"], {"last_id": 0})
     pos, gap, added = st["last_id"] + 1, 0, 0
-    log(f"▶ @{ch['username']} → {ch['category']} (ממשיך מהודעה {pos})")
+    log(f"▶ @{ch['username']} → {ch['category']} (ממשיך מהודעה {pos}, יש {have}"
+        + (f" מתוך {max_items})" if max_items else ")"))
 
     while time.time() < deadline:
         msgs = await client.get_messages(entity, ids=list(range(pos, pos + BATCH)))
@@ -199,6 +206,11 @@ async def sync_channel(client, uploader, arc, ch, deadline, bitrate=None):
                 arc.new.append(item)
                 arc.ids.add(ep_id)
                 added += 1
+                st["last_id"] = max(st["last_id"], msg.id)
+                if max_items and have + added >= max_items:
+                    arc.save()
+                    log(f"■ @{ch['username']}: הגענו ל-{max_items} פרקים – עוצרים כדי לשמור על נפח האחסון")
+                    return added, True
             st["last_id"] = max(st["last_id"], msg.id)
             if added and added % 5 == 0:
                 arc.save()
@@ -262,7 +274,7 @@ async def main():
 
     # ניקוי ערכים שהודבקו עם רווחים או שורות ריקות (טעות נפוצה בהדבקה ל-GitHub)
     for k in list(os.environ):
-        if k.startswith(("TG_", "R2_")) or k in ("MEDIA_BASE_URL", "NOTIFY_CHAT_ID", "CHANNELS", "AUDIO_BITRATE"):
+        if k.startswith(("TG_", "R2_")) or k in ("MEDIA_BASE_URL", "NOTIFY_CHAT_ID", "CHANNELS", "AUDIO_BITRATE", "MAX_PER_CHANNEL"):
             os.environ[k] = os.environ[k].strip()
     # R2_ACCOUNT_ID: מספיק להדביק את המזהה (32 תווים) – גם אם הודבקה כתובת מלאה
     acc = re.search(r"[0-9a-fA-F]{32}", os.environ.get("R2_ACCOUNT_ID", ""))
@@ -284,6 +296,7 @@ async def main():
 
     deadline = time.time() + 60 * int(os.environ.get("TIME_BUDGET_MIN") or 320)
     bitrate = (os.environ.get("AUDIO_BITRATE") or "").strip() or None
+    max_items = int(os.environ.get("MAX_PER_CHANNEL") or 30)
     channels = parse_channels(os.environ.get("CHANNELS"))
     arc = Archive(os.environ["MEDIA_BASE_URL"])
     uploader = make_uploader()
@@ -294,7 +307,7 @@ async def main():
     try:
         total = 0
         for ch in channels:
-            added, done = await sync_channel(client, uploader, arc, ch, deadline, bitrate)
+            added, done = await sync_channel(client, uploader, arc, ch, deadline, bitrate, max_items)
             total += added
             log(f"✓ @{ch['username']}: נוספו {added}" + ("" if done else " (ימשיך בהרצה הבאה)"))
             if time.time() >= deadline:
