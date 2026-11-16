@@ -24,7 +24,11 @@ jobs:
       group: telegram-sync
       cancel-in-progress: false
     steps:
+      # תמיד הגרסה העדכנית של main (ולא הגרסה שהייתה כשההרצה נכנסה לתור) –
+      # אחרת הרצה שחיכתה בתור מתחילה מרשימת פרקים ישנה ומורידה הכול מחדש
       - uses: actions/checkout@v5
+        with:
+          ref: main
 
       - uses: actions/setup-python@v6
         with:
