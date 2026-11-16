@@ -1,6 +1,6 @@
 /* Service Worker – מעטפת האפליקציה עובדת גם בלי רשת.
    שידורים חיים וקובצי שמע לא נשמרים במטמון (לא חוסמים, לא תופסים מקום). */
-var VERSION = "ngn-v3";
+var VERSION = "dikman-v4";
 var SHELL = [
   "./", "index.html", "css/app.css",
   "css/motion.css", "css/mixer.css",
