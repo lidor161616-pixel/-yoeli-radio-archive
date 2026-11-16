@@ -6,14 +6,14 @@ window.RADIO_CONFIG = {
 
   // מצב הדגמה: כל עוד אין כתובת שידור אמיתית, מתנגן צליל הדגמה שנוצר בדפדפן.
   // אחרי שמכניסים את live.url – להעביר ל-false.
-  demo: true,
+  demo: false,
 
   // ---------- השידור החי ----------
   live: {
     program: "יואלי דיקמן – בשידור חי",
     stationLabel: "קול פליי 107.6FM",
     // ↓↓↓ כאן מדביקים את הכתובת הישירה של השידור (מסתיימת ב-mp3 / aac / m3u8 וכו')
-    url: "",
+    url: "https://cdn.cybercdn.live/Kol_Barama/Music/icecast.audio",
     nowPlaying: ""          // אופציונלי: status-json.xsl של Icecast
   },
 
