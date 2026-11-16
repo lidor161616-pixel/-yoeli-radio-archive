@@ -1,5 +1,5 @@
 /* ==========================================================================
-   נגינה FM — עיצוב קונסולת אולפן
+   DIKMAN FM — עיצוב קונסולת אולפן
    פלטה: פחם (charcoal) · כסף מטאלי · תכלת ניאון
    ========================================================================== */
 
@@ -81,7 +81,7 @@ button { cursor: pointer; background: none; border: 0; padding: 0; }
 .topbar { display: flex; align-items: center; justify-content: space-between; padding: 4px 2px 16px; }
 .brand { display: flex; align-items: center; gap: 12px; }
 .brand-mark { width: 40px; height: 40px; }
-.brand-name { font-weight: 700; font-size: 21px; letter-spacing: -.01em; line-height: 1.1; }
+.brand-name { font-weight: 700; font-size: 21px; letter-spacing: .06em; line-height: 1.1; text-align: right; unicode-bidi: isolate; }
 .brand-name span { font-family: var(--mono); font-weight: 400; font-size: 15px; color: var(--neon); margin-inline-start: 2px; letter-spacing: .08em; }
 .brand-sub { font-size: 12.5px; color: var(--ink-3); margin-top: 2px; }
 
