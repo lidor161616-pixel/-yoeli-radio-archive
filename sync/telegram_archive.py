@@ -17,8 +17,8 @@
   CHANNELS           – אופציונלי. ברירת מחדל: שני הערוצים של יואלי
   TIME_BUDGET_MIN    – אופציונלי. כמה דקות לעבוד בהרצה אחת (ברירת מחדל 320)
   AUDIO_BITRATE      – אופציונלי. למשל 96k כדי לדחוס ולחסוך אחסון. ריק = הקובץ המקורי
-  NOTIFY_CHAT_ID     – אופציונלי. צ'אט/קבוצה/ערוץ שאליו הבוט ישלח הודעה כשנוספים פרקים
-                       (מספר כמו -1001234567890 או @username). הבוט חייב להיות חבר שם.
+  NOTIFY_CHAT_ID     – אופציונלי. צ'אטים/ערוצים שאליהם הבוט ישלח הודעה כשנוספים פרקים,
+                       מופרדים בפסיק (-1001234567890,-1009876543210). הבוט חייב להיות מנהל שם.
 """
 import asyncio
 import json
@@ -260,6 +260,15 @@ async def main():
     from telethon import TelegramClient
     from telethon.sessions import StringSession
 
+    # ניקוי ערכים שהודבקו עם רווחים או שורות ריקות (טעות נפוצה בהדבקה ל-GitHub)
+    for k in list(os.environ):
+        if k.startswith(("TG_", "R2_")) or k in ("MEDIA_BASE_URL", "NOTIFY_CHAT_ID", "CHANNELS", "AUDIO_BITRATE"):
+            os.environ[k] = os.environ[k].strip()
+    # R2_ACCOUNT_ID: מספיק להדביק את המזהה (32 תווים) – גם אם הודבקה כתובת מלאה
+    acc = re.search(r"[0-9a-fA-F]{32}", os.environ.get("R2_ACCOUNT_ID", ""))
+    if acc:
+        os.environ["R2_ACCOUNT_ID"] = acc.group(0).lower()
+
     # מקבלים את MEDIA_BASE_URL גם אם נשמר כ-Secret וגם כ-Variable
     missing = [k for k in ("TG_API_ID", "TG_API_HASH", "TG_BOT_TOKEN", "R2_ACCOUNT_ID", "R2_ACCESS_KEY_ID",
                            "R2_SECRET_ACCESS_KEY", "R2_BUCKET", "MEDIA_BASE_URL") if not os.environ.get(k)]
@@ -292,9 +301,12 @@ async def main():
                 break
         arc.save()
         log(f"סיום. נוספו {total} פרקים. בארכיון: {len(arc.data['items'])}.")
-        chat = (os.environ.get("NOTIFY_CHAT_ID") or "").strip()
-        if arc.new and chat:
-            await notify(client, chat, notify_text(arc.new, len(arc.data["items"])))
+        # NOTIFY_CHAT_ID: אפשר כמה צ'אטים, מופרדים בפסיק
+        chats = [c.strip() for c in (os.environ.get("NOTIFY_CHAT_ID") or "").replace(";", ",").split(",") if c.strip()]
+        if arc.new and chats:
+            text = notify_text(arc.new, len(arc.data["items"]))
+            for chat in chats:
+                await notify(client, chat, text)
     finally:
         await client.disconnect()
 
