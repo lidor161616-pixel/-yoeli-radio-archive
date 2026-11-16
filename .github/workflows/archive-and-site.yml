@@ -49,6 +49,7 @@ jobs:
           CHANNELS: ${{ vars.CHANNELS }}
           AUDIO_BITRATE: ${{ vars.AUDIO_BITRATE }}
           NOTIFY_CHAT_ID: ${{ vars.NOTIFY_CHAT_ID || secrets.NOTIFY_CHAT_ID }}
+          MAX_PER_CHANNEL: ${{ vars.MAX_PER_CHANNEL || '30' }}
         run: python sync/telegram_archive.py
 
       - name: שמירת רשימת הארכיון
