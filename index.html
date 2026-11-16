@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Share+Tech+Mono&display=swap">
   <link rel="stylesheet" href="css/app.css">
   <link rel="stylesheet" href="css/motion.css">
+  <link rel="stylesheet" href="css/mixer.css">
 </head>
 <body>
 <div class="app" id="app">
@@ -42,16 +43,19 @@
 
   <main class="layout">
     <!-- ===== קונסולת הנגן ===== -->
-    <section class="deck" aria-label="נגן">
+    <section class="deck console" aria-label="מיקסר השידור">
       <i class="screw s1"></i><i class="screw s2"></i><i class="screw s3"></i><i class="screw s4"></i>
 
-      <div class="bezel">
-        <div class="lcd" id="lcd">
+      <!-- ===== גשר המסכים (Meter bridge) ===== -->
+      <div class="bridge">
+        <div class="lcd screen" id="lcd">
           <div class="lcd-row">
             <span class="lcd-tag" id="lcdTag">LIVE</span>
             <span class="lcd-date" id="lcdDate"></span>
-            <span class="lcd-clock mono" id="lcdClock">--:--</span>
+            <span class="lcd-clock mono" id="lcdClock" hidden>--:--</span>
+            <span class="onair-lamp" id="onairLamp">ON AIR</span>
           </div>
+          <div class="big-clock mono" id="bigClock" aria-label="השעה עכשיו"><span class="ghost">88:88:88</span><span class="digits">--:--:--</span></div>
           <div class="lcd-title" id="lcdTitle"><span>הקישו על נגן כדי להאזין</span></div>
           <div class="lcd-sub" id="lcdSub">נגינה FM · שידורים חוזרים</div>
 
@@ -63,33 +67,68 @@
             </div>
             <div class="progress-times mono"><span id="tCur">0:00</span><span id="tDur">0:00</span></div>
           </div>
+
+          <div class="meters" aria-hidden="true">
+            <div class="vu"><svg viewBox="0 0 160 92" id="vuL"></svg><b>L</b></div>
+            <div class="vu"><svg viewBox="0 0 160 92" id="vuR"></svg><b>R</b></div>
+          </div>
         </div>
       </div>
 
-      <div class="meters" aria-hidden="true">
-        <div class="vu"><svg viewBox="0 0 160 92" id="vuL"></svg><b>L</b></div>
-        <div class="vu"><svg viewBox="0 0 160 92" id="vuR"></svg><b>R</b></div>
-      </div>
+      <!-- ===== משטח הערוצים ===== -->
+      <div class="surface">
+        <div class="strips">
+          <div class="strip" data-ch="live">
+            <span class="knob" aria-hidden="true"></span>
+            <div class="scribble"><b>קול פליי</b><span data-status>LIVE</span></div>
+            <div class="pads">
+              <button class="pad red" data-act="on" aria-label="האזנה לשידור החי של קול פליי">ON</button>
+              <button class="pad" data-act="auto" aria-label="מצב אוטומטי: חי בזמן התוכנית, ארכיון בשאר השעות">AUTO</button>
+            </div>
+            <div class="fwrap"><div class="scale" aria-hidden="true"></div><div class="ftrack"><i class="slot"></i><span class="fcap" role="slider" tabindex="0" aria-label="פיידר שידור חי"></span></div><div class="ladder" aria-hidden="true"></div></div>
+            <div class="strip-name">LIVE · 107.6</div>
+          </div>
 
-      <div class="transport">
-        <button class="tbtn" id="btnBack" aria-label="15 שניות אחורה" disabled>
-          <svg viewBox="0 0 24 24"><path d="M13 5a7 7 0 1 1-6.6 9.3" /><path d="M13 2v6h-.01L16.5 5 13 2z" class="fill"/><text x="12.6" y="15.6" text-anchor="middle">15</text></svg>
-        </button>
-        <button class="play" id="btnPlay" aria-label="נגן">
-          <span class="play-ring"></span>
-          <svg class="ic-play" viewBox="0 0 24 24"><path d="M16 5.5v13L6.5 12z"/></svg>
-          <svg class="ic-pause" viewBox="0 0 24 24"><rect x="6.5" y="5.5" width="3.6" height="13" rx="1"/><rect x="13.9" y="5.5" width="3.6" height="13" rx="1"/></svg>
-          <span class="spinner"></span>
-        </button>
-        <button class="tbtn" id="btnFwd" aria-label="15 שניות קדימה" disabled>
-          <svg viewBox="0 0 24 24"><path d="M11 5a7 7 0 1 0 6.6 9.3" /><path d="M11 2v6h.01L7.5 5 11 2z" class="fill"/><text x="11.4" y="15.6" text-anchor="middle">15</text></svg>
-        </button>
-      </div>
+          <div class="strip" data-ch="מאסטר פליי">
+            <span class="knob" aria-hidden="true"></span>
+            <div class="scribble"><b>מאסטר פליי</b><span data-status>ארכיון</span></div>
+            <div class="pads">
+              <button class="pad" data-act="on" aria-label="ארכיון מאסטר פליי">ON</button>
+              <button class="pad" data-act="next" aria-label="הפרק הבא">NEXT</button>
+            </div>
+            <div class="fwrap"><div class="scale" aria-hidden="true"></div><div class="ftrack"><i class="slot"></i><span class="fcap" role="slider" tabindex="0" aria-label="פיידר מאסטר פליי"></span></div><div class="ladder" aria-hidden="true"></div></div>
+            <div class="strip-name">MASTER PLAY</div>
+          </div>
 
-      <div class="fader">
-        <svg viewBox="0 0 24 24" class="fader-ic" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/></svg>
-        <input type="range" id="vol" min="0" max="100" value="85" aria-label="עוצמת שמע">
-        <span class="mono fader-val" id="volVal">85</span>
+          <div class="strip" data-ch="לילה מנצח">
+            <span class="knob" aria-hidden="true"></span>
+            <div class="scribble"><b>לילה מנצח</b><span data-status>ארכיון</span></div>
+            <div class="pads">
+              <button class="pad" data-act="on" aria-label="ארכיון לילה מנצח">ON</button>
+              <button class="pad" data-act="next" aria-label="הפרק הבא">NEXT</button>
+            </div>
+            <div class="fwrap"><div class="scale" aria-hidden="true"></div><div class="ftrack"><i class="slot"></i><span class="fcap" role="slider" tabindex="0" aria-label="פיידר לילה מנצח"></span></div><div class="ladder" aria-hidden="true"></div></div>
+            <div class="strip-name">LAILA</div>
+          </div>
+
+          <div class="strip master" data-ch="master">
+            <span class="knob" aria-hidden="true"></span>
+            <div class="scribble"><b>MASTER</b><span data-status id="volVal">85</span></div>
+            <div class="pads transport">
+              <button class="pad tbtn" id="btnBack" aria-label="15 שניות אחורה" disabled><svg viewBox="0 0 24 24"><path d="M13 5a7 7 0 1 1-6.6 9.3"/><path d="M13 2v6h-.01L16.5 5 13 2z" class="fill"/></svg></button>
+              <button class="pad tbtn" id="btnFwd" aria-label="15 שניות קדימה" disabled><svg viewBox="0 0 24 24"><path d="M11 5a7 7 0 1 0 6.6 9.3"/><path d="M11 2v6h.01L7.5 5 11 2z" class="fill"/></svg></button>
+              <button class="pad play" id="btnPlay" aria-label="נגן">
+                <span class="play-ring"></span>
+                <svg class="ic-play" viewBox="0 0 24 24"><path d="M16 5.5v13L6.5 12z"/></svg>
+                <svg class="ic-pause" viewBox="0 0 24 24"><rect x="6.5" y="5.5" width="3.6" height="13" rx="1"/><rect x="13.9" y="5.5" width="3.6" height="13" rx="1"/></svg>
+                <span class="spinner"></span>
+              </button>
+            </div>
+            <div class="fwrap"><div class="scale" aria-hidden="true"></div><div class="ftrack"><i class="slot"></i><span class="fcap" role="slider" tabindex="0" aria-label="עוצמת שמע"></span></div><div class="ladder" aria-hidden="true"></div></div>
+            <div class="strip-name">MASTER</div>
+            <input type="range" id="vol" class="sr-only" min="0" max="100" value="85" tabindex="-1" aria-hidden="true">
+          </div>
+        </div>
       </div>
     </section>
 
@@ -159,5 +198,6 @@
 <script src="js/demo-audio.js"></script>
 <script src="js/app.js"></script>
 <script src="js/motion.js"></script>
+<script src="js/mixer.js"></script>
 </body>
 </html>
