@@ -1,11 +1,11 @@
 /* Service Worker – מעטפת האפליקציה עובדת גם בלי רשת.
    שידורים חיים וקובצי שמע לא נשמרים במטמון (לא חוסמים, לא תופסים מקום). */
-var VERSION = "dikman-v4";
+var VERSION = "dikman-v5";
 var SHELL = [
   "./", "index.html", "css/app.css",
   "css/motion.css", "css/mixer.css",
   "js/config.js", "js/zmanim.js", "js/schedule.js", "js/demo-audio.js", "js/app.js", "js/motion.js", "js/mixer.js",
-  "icons/icon.svg", "manifest.webmanifest"
+  "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/favicon-32.png", "manifest.webmanifest"
 ];
 
 self.addEventListener("install", function (e) {
