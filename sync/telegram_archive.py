@@ -312,7 +312,9 @@ async def main():
             log(f"✓ @{ch['username']}: נוספו {added}" + ("" if done else " (ימשיך בהרצה הבאה)"))
             if time.time() >= deadline:
                 break
-        arc.save()
+        # שומרים רק כשבאמת נוסף משהו – בלי קומיט מיותר כל שעה כשהארכיון כבר מלא
+        if total:
+            arc.save()
         log(f"סיום. נוספו {total} פרקים. בארכיון: {len(arc.data['items'])}.")
         # NOTIFY_CHAT_ID: אפשר כמה צ'אטים, מופרדים בפסיק
         chats = [c.strip() for c in (os.environ.get("NOTIFY_CHAT_ID") or "").replace(";", ",").split(",") if c.strip()]
