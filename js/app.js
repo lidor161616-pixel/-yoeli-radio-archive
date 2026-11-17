@@ -703,19 +703,32 @@
   }
   window.addEventListener("hashchange", checkClosed);
 
-  // ---------- התקנה כאפליקציה ----------
+  // ---------- התקנה כאפליקציה (מחשב וטלפון) ----------
+  // כשהאתר רץ כאפליקציה מותקנת (חלון נפרד) – לא מציגים כפתור התקנה
+  function isInstalled() {
+    try { if (window.matchMedia("(display-mode: standalone)").matches || window.matchMedia("(display-mode: minimal-ui)").matches) return true; } catch (e) {}
+    return window.navigator.standalone === true;
+  }
+  if (isInstalled()) document.documentElement.classList.add("is-app");
   var deferredPrompt = null;
   window.addEventListener("beforeinstallprompt", function (e) {
     e.preventDefault(); deferredPrompt = e;
-    if ($("installBtn")) return;
+    if ($("installBtn") || isInstalled()) return;
     var b = document.createElement("button");
-    b.id = "installBtn"; b.className = "onair"; b.textContent = "התקנה";
+    b.id = "installBtn"; b.className = "onair"; b.textContent = "התקנת האפליקציה";
     b.style.marginInlineStart = "8px";
     b.addEventListener("click", function () {
       if (!deferredPrompt) return;
-      deferredPrompt.prompt(); deferredPrompt = null; b.remove();
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function (c) { if (c && c.outcome === "accepted") b.remove(); }).catch(function () {});
+      deferredPrompt = null;
     });
     document.querySelector(".topbar").appendChild(b);
+  });
+  window.addEventListener("appinstalled", function () {
+    var b = $("installBtn"); if (b) b.remove();
+    deferredPrompt = null;
+    toast("DIKMAN FM הותקנה במחשב");
   });
   if ("serviceWorker" in navigator && location.protocol === "https:") {
     try { navigator.serviceWorker.register("sw.js").catch(function () {}); } catch (e) {}
