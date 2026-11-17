@@ -227,6 +227,13 @@
   }
   if (REDUCE) sync(); else bootFaders();
 
+  // פד "מוזיקה": הכנה לרשימת השירים שמתנגנים – בינתיים הודעה קצרה
+  var music = $("#btnMusic");
+  if (music) music.addEventListener("click", function () {
+    flash(music);
+    if (R.toast) R.toast("רשימת השירים – בקרוב");
+  });
+
   // מקלדת: 1/3/7 = ערוצים (טלפונים כשרים)
   document.addEventListener("keydown", function (e) {
     if (e.target.tagName === "INPUT") return;
