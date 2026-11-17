@@ -301,12 +301,19 @@
     return pool.filter(function (e) { return e.id === id; })[0];
   }
 
-  function playReplayNext() {
+  function playReplayNext(tries) {
     if (guardClosed()) return;
+    tries = typeof tries === "number" ? tries : 0;
     var ep = nextFromBag();
     if (!ep) { toast("הארכיון עדיין נטען…"); state.pendingRadio = true; return; }
     var src = srcFor(ep);
-    if (!src) { state.item = ep; playReplayNext(); return; }
+    if (!src) {
+      // הקלטה בלי קובץ שמע – מדלגים לבאה, אבל לא יותר מסבב שלם (בלי לולאה אינסופית)
+      state.item = ep;
+      if (tries < rotationPool().length) playReplayNext(tries + 1);
+      else { setLoading(false); toast("אין כרגע הקלטות זמינות להשמעה"); }
+      return;
+    }
     state.mode = "replay"; state.auto = true; state.item = ep; state.queue = rotationPool();
     updateDeck();
     start(src);
@@ -745,6 +752,7 @@
       state.channel = cat; state.bag = []; state.manualLive = false; playReplayNext();
     },
     toggle: togglePlay, stop: stopAudio, seek: seek, next: function () { step(1); },
+    toast: toast,
     setVolume: function (v) { vol.value = Math.round(v); applyVol(); },
     getVolume: function () { return +vol.value; }
   };
