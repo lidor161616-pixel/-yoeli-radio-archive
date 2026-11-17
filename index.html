@@ -80,6 +80,19 @@
         </div>
       </div>
 
+      <!-- ===== כפתור הנגינה הראשי – במרווח שבין המסך למשטח ===== -->
+      <div class="transport-bay">
+        <span class="bay-groove" aria-hidden="true"></span>
+        <button class="play big-play" id="btnPlay" aria-label="נגן">
+          <span class="play-ring"></span>
+          <svg class="ic-play" viewBox="0 0 24 24"><path d="M16 5.5v13L6.5 12z"/></svg>
+          <svg class="ic-pause" viewBox="0 0 24 24"><rect x="6.5" y="5.5" width="3.6" height="13" rx="1"/><rect x="13.9" y="5.5" width="3.6" height="13" rx="1"/></svg>
+          <span class="spinner"></span>
+        </button>
+        <span class="bay-groove" aria-hidden="true"></span>
+        <span class="bay-label">PLAY · PAUSE</span>
+      </div>
+
       <!-- ===== משטח הערוצים ===== -->
       <div class="surface">
         <div class="strips">
@@ -122,12 +135,7 @@
             <div class="pads transport">
               <button class="pad tbtn" id="btnBack" aria-label="15 שניות אחורה" disabled><svg viewBox="0 0 24 24"><path d="M13 5a7 7 0 1 1-6.6 9.3"/><path d="M13 2v6h-.01L16.5 5 13 2z" class="fill"/></svg></button>
               <button class="pad tbtn" id="btnFwd" aria-label="15 שניות קדימה" disabled><svg viewBox="0 0 24 24"><path d="M11 5a7 7 0 1 0 6.6 9.3"/><path d="M11 2v6h.01L7.5 5 11 2z" class="fill"/></svg></button>
-              <button class="pad play" id="btnPlay" aria-label="נגן">
-                <span class="play-ring"></span>
-                <svg class="ic-play" viewBox="0 0 24 24"><path d="M16 5.5v13L6.5 12z"/></svg>
-                <svg class="ic-pause" viewBox="0 0 24 24"><rect x="6.5" y="5.5" width="3.6" height="13" rx="1"/><rect x="13.9" y="5.5" width="3.6" height="13" rx="1"/></svg>
-                <span class="spinner"></span>
-              </button>
+              <button class="pad music" id="btnMusic" aria-label="מוזיקה – רשימת השירים (בקרוב)">מוזיקה</button>
             </div>
             <div class="fwrap"><div class="scale" aria-hidden="true"></div><div class="ftrack"><i class="slot"></i><span class="fcap" role="slider" tabindex="0" aria-label="עוצמת שמע"></span></div><div class="ladder" aria-hidden="true"></div></div>
             <div class="strip-name">MASTER</div>
